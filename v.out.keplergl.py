@@ -84,8 +84,6 @@ def load_key_value_file(filename):
     # pylint: disable=import-outside-toplevel
     lower = filename.lower()
     if lower.endswith(".json"):
-        import json
-
         with open(filename) as file:
             return json.loads(file.read())
     elif lower.endswith(".yaml") or lower.endswith(".yml"):
@@ -103,6 +101,7 @@ def load_key_value_file(filename):
 
 
 def create_base_configuration():
+    """Get basic structure for configuration"""
     return {
         "version": "v1",
         "config": {
@@ -144,6 +143,10 @@ def create_base_configuration():
 
 
 def add_layer(config, data_id, label, visual_channels):
+    """Add layer to configuration
+
+    Currently, only one layer is possible since id is hardcoded.
+    """
     layer = {
         "id": "m1vnv5v",
         "type": "geojson",
@@ -171,7 +174,11 @@ def add_layer(config, data_id, label, visual_channels):
     config["config"]["visState"]["layers"].append(layer)
 
 
-def create_visual_channels(config, color_column, stroke_color_column, height_column):
+def create_visual_channels(color_column, stroke_color_column, height_column):
+    """Get visual channels configuration for a layer.
+
+    Parameters set to None are not included.
+    """
     visual_channels = {
         "colorField": None,
         "colorScale": "quantize",
@@ -200,6 +207,10 @@ def create_visual_channels(config, color_column, stroke_color_column, height_col
 
 
 def add_map_state(config, zoom):
+    """Add map state to the configuration.
+
+    Center of the map is determined from the region, zoom from the parameter.
+    """
     center = gs.parse_command("g.region", flags="cg")
     longitude = float(center["center_easting"])
     latitude = float(center["center_northing"])
@@ -217,7 +228,8 @@ def add_map_state(config, zoom):
 
 
 def main():
-    options, flags = gs.parser()
+    """Processes command line and directs the creation of the visualization"""
+    options, unused_flags = gs.parser()
     vector_input = options["input"]
     output_html = options["output"]
     title = options["title"]
@@ -230,7 +242,6 @@ def main():
     config = create_base_configuration()
 
     visual_channels = create_visual_channels(
-        config,
         color_column=options["color_column"],
         stroke_color_column=options["stroke_color_column"],
         height_column=options["height_column"],
@@ -251,7 +262,8 @@ def main():
 
     # Maybe move to add_columns_to_show(config,... function.
     if options["columns"]:
-        # TODO: Check for column presence is needed here. (parser does not know which map to check)
+        # TODO: Check for column presence is needed here.
+        # (Parser does not know which map to check.)
         show_columns = options["columns"].split(",")
     else:
         # TODO: Get all columns if needed to display all.
