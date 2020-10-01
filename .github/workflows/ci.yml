@@ -33,7 +33,7 @@ jobs:
       if: steps.cache-data.outputs.cache-hit != 'true'
       run: |
         grass --tmp-location XY --exec g.extension g.download.location --verbose
-        grass --tmp-location XY --exec g.download.location url=https://grass.osgeo.org/sampledata/north_carolina/nc_basic_spm_grass7.tar.gz --verbose
+        grass --tmp-location XY --exec g.download.location url=https://grass.osgeo.org/sampledata/north_carolina/nc_basic_spm_grass7.tar.gz dbase=~ --verbose
     - name: Run test (manually specified files)
       run: |
         cd testsuite/
