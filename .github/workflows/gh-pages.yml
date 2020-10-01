@@ -35,7 +35,6 @@ jobs:
       run: |
         cp build/docs/html/${{ github.event.repository.name }}.html build/docs/html/index.html
     - name: Deploy
-    - name: Deploy
       uses: peaceiris/actions-gh-pages@v3
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
