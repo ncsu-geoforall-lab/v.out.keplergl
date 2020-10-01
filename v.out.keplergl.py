@@ -98,6 +98,7 @@ def load_key_value_file(filename):
 
         with open(filename) as file:
             return ast.literal_eval(file.read())
+    raise ValueError(f"Unknown file extension (file: {filename})")
 
 
 def create_base_configuration():
@@ -253,7 +254,12 @@ def main():
 
     style_file = options["style"]
     if style_file:
-        style = load_key_value_file(style_file)
+        try:
+            style = load_key_value_file(style_file)
+        except ValueError as error:
+            gs.fatal(
+                _("Format of style file not recognized: {error}").format(error=error)
+            )
         for key, value in style.items():
             # Assuming only one layer here.
             config["config"]["visState"]["layers"][0]["config"]["visConfig"][
