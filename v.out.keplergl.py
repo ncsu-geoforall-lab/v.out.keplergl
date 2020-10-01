@@ -1,5 +1,22 @@
 #!/usr/bin/env python3
 
+# MODULE:    v.out.keplergl
+#
+# AUTHOR(S): Vaclav Petras <wenzeslaus gmail com>
+#
+# PURPOSE:   Create Kepler.gl visualizations from vector maps
+#
+# COPYRIGHT: (C) 2020 Vaclav Petras, and by the GRASS Development Team
+#
+#            This program is free software under the GNU General Public
+#            License (>=v2). Read the file COPYING that comes with GRASS
+#            for details.
+
+"""Kepler.gl visualization module for GRASS GIS
+
+This executable script is a GRASS GIS module to run in a GRASS GIS session.
+"""
+
 #%module
 #% description: Create Kepler.gl visualizations
 #% keyword: vector
