@@ -143,11 +143,21 @@ def create_base_configuration():
     }
 
 
-def add_layer(config, data_id, label, visual_channels):
+def add_layer(config, data_id, label, visual_channels, style_file):
     """Add layer to configuration
 
     Currently, only one layer is possible since id is hardcoded.
     """
+    if style_file:
+        try:
+            style = load_key_value_file(style_file)
+        except ValueError as error:
+            gs.fatal(
+                _("Format of style file not recognized: {error}").format(error=error)
+            )
+    else:
+        style = {}
+
     layer = {
         "id": "m1vnv5v",
         "type": "geojson",
@@ -172,6 +182,10 @@ def add_layer(config, data_id, label, visual_channels):
         },
         "visualChannels": visual_channels,
     }
+    for key, value in style.items():
+        # Assuming only one layer here.
+        layer["config"]["visConfig"][key] = value
+
     config["config"]["visState"]["layers"].append(layer)
 
 
@@ -249,22 +263,12 @@ def main():
     )
 
     add_layer(
-        config, data_id=data_id, label=data_label, visual_channels=visual_channels
+        config,
+        data_id=data_id,
+        label=data_label,
+        visual_channels=visual_channels,
+        style_file=options["style"],
     )
-
-    style_file = options["style"]
-    if style_file:
-        try:
-            style = load_key_value_file(style_file)
-        except ValueError as error:
-            gs.fatal(
-                _("Format of style file not recognized: {error}").format(error=error)
-            )
-        for key, value in style.items():
-            # Assuming only one layer here.
-            config["config"]["visState"]["layers"][0]["config"]["visConfig"][
-                key
-            ] = value
 
     # Maybe move to add_columns_to_show(config,... function.
     if options["columns"]:
