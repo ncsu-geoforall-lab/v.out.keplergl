@@ -1,4 +1,4 @@
-# v.out.keplergk: GRASS GIS module to create Kepler.gl visualizations
+# v.out.keplergl: GRASS GIS module to create Kepler.gl visualizations
 
 [![GRASS GIS module](https://img.shields.io/badge/GRASS%20GIS-module-%23009000)](https://grass.osgeo.org/)
 [![CI](https://github.com/ncsu-geoforall-lab/v.out.keplergl/workflows/CI/badge.svg)](https://github.com/ncsu-geoforall-lab/v.out.keplergl/actions?query=workflow%3A%22CI%22)

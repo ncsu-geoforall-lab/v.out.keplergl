@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 #%module
-#% description: Adds the values of two rasters (A + B)
-#% keyword: raster
+#% description: Create Kepler.gl visualizations
+#% keyword: vector
 #% keyword: algebra
 #% keyword: sum
 #%end
@@ -205,7 +205,6 @@ def main():
     output_html = options["output"]
     title = options["title"]
 
-    # TODO: Use map name.
     data_id = vector_input.replace("@", "__at__")
 
     # TODO: Use map title if present, then map name as defaults.
@@ -246,6 +245,7 @@ def main():
 
     add_map_state(config, zoom=options["zoom"])
 
+    # TODO: proper tmp file
     geojson_file = "/tmp/file.json"
     gs.run_command(
         "v.out.ogr",
