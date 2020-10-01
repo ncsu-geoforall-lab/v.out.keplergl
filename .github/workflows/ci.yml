@@ -24,18 +24,18 @@ jobs:
       run: |
         grass --tmp-location XY --exec g.extension extension=${{ github.event.repository.name }} url=. --verbose
     - name: Cache data for testing
-      id: cache-nc_spm_08_grass7
-      uses: actions/cache@v1
+      id: cache-data
+      uses: actions/cache@v2
       with:
-        path: nc_spm_08_grass7
-        key: ${{ runner.os }}-nc_spm_08_grass7
+        path: nc_basic_spm_grass7
+        key: ${{ runner.os }}-nc_basic_spm_grass7
     - name: Get sample data for testing (NC SPM sample location)
-      if: steps.cache-nc_spm_08_grass7.outputs.cache-hit != 'true'
+      if: steps.cache-data.outputs.cache-hit != 'true'
       run: |
         grass --tmp-location XY --exec g.extension g.download.location --verbose
-        grass --tmp-location XY --exec g.download.location url=https://grass.osgeo.org/sampledata/north_carolina/nc_spm_08_grass7.tar.gz --verbose
+        grass --tmp-location XY --exec g.download.location url=https://grass.osgeo.org/sampledata/north_carolina/nc_basic_spm_grass7.tar.gz --verbose
     - name: Run test (manually specified files)
       run: |
         cd testsuite/
-        grass -c ~/nc_spm_08_grass7/test --exec ./test_v_out_keplergl.py
-        rm -rf ~/nc_spm_08_grass7/test
+        grass -c ~/nc_basic_spm_grass7/test --exec ./test_v_out_keplergl.py
+        rm -rf ~/nc_basic_spm_grass7/test
