@@ -284,8 +284,10 @@ def main():
 
     add_map_state(config, zoom=options["zoom"])
 
-    # TODO: proper tmp file
-    geojson_file = "/tmp/file.json"
+    # TODO: Isn't system tmp file more appropriate?
+    # or file in the already existing session tmp dir in system
+    # This file is not cleaned up by the module (but only with session cleanups).
+    geojson_file = gs.tempfile(create=False)
     gs.run_command(
         "v.out.ogr",
         input=vector_input,

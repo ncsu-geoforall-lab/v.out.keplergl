@@ -14,6 +14,8 @@ License (>=v2). Read the file COPYING that comes with GRASS
 for details.
 """
 
+import os
+
 from grass.gunittest.case import TestCase
 from grass.gunittest.main import test
 
