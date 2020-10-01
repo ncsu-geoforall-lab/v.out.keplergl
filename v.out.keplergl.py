@@ -63,7 +63,7 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #%option G_OPT_F_INTPUT
 #% key: style
 #% label: Style of the layer for Kepler.gl
-#% description: visConfig element content as JSON (.json), YAML (.yaml, .yml) or Python literal (.py, .dict)
+#% description: visConfig element content as JSON, YAML or Python literal (.py)
 #%end
 #%rules
 #% requires: color_column, style
