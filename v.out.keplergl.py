@@ -75,9 +75,6 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 import sys
 import json
 
-from keplergl import KeplerGl
-from in_place import InPlace
-
 import grass.script as gs
 
 
@@ -252,6 +249,40 @@ def add_map_state(config, zoom):
     config["config"]["mapState"] = map_state
 
 
+def write_html(geojson_file, data_id, output_html, config, title):
+    """Write Kepler.gl HTML and update its content"""
+    # Lazy load non-standard dependencies to play nicely in cases
+    # when only interface description is requested and the module
+    # actually does not run.
+    try:
+        # pylint: disable=import-outside-toplevel
+        from keplergl import KeplerGl
+        from in_place import InPlace
+    except ImportError as error:
+        gs.fatal(
+            _("Missing mandatory keplergl or in_place dependencies: {error}").format(
+                error=error
+            )
+        )
+
+    # Useful to examine the resulting configuration
+    # print("Using configuration (JSON syntax):")
+    # print(json.dumps(config, indent=2))
+    kepler = KeplerGl(config=config)
+    kepler.add_data(data=open(geojson_file).read(), name=data_id)
+    kepler.save_to_html(file_name=output_html)
+
+    # Add map title and creator
+    with InPlace(output_html) as file:
+        for line in file:
+            line = line.replace(
+                "<title>Kepler.gl</title>",
+                f"<title>{title} &ndash; GRASS GIS Kepler.gl</title>",
+            )
+            line = line.replace("Kepler.gl Jupyter", title)
+            file.write(line)
+
+
 def main():
     """Processes command line and directs the creation of the visualization"""
     options, unused_flags = gs.parser()
@@ -307,22 +338,13 @@ def main():
         flags="s",
     )
 
-    # Useful to examine the resulting configuration
-    # print("Using configuration (JSON syntax):")
-    # print(json.dumps(config, indent=2))
-    kepler = KeplerGl(config=config)
-    kepler.add_data(data=open(geojson_file).read(), name=data_id)
-    kepler.save_to_html(file_name=output_html)
-
-    # Add map title and creator
-    with InPlace(output_html) as file:
-        for line in file:
-            line = line.replace(
-                "<title>Kepler.gl</title>",
-                f"<title>{title} &ndash; GRASS GIS Kepler.gl</title>",
-            )
-            line = line.replace("Kepler.gl Jupyter", title)
-            file.write(line)
+    write_html(
+        geojson_file=geojson_file,
+        data_id=data_id,
+        output_html=output_html,
+        config=config,
+        title=title,
+    )
 
     return 0
 
