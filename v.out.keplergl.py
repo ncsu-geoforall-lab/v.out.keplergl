@@ -72,6 +72,7 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #% requires: height_column, style
 #%end
 
+import os
 import sys
 import json
 
@@ -150,18 +151,38 @@ def create_base_configuration():
     }
 
 
+def load_style_from_file(filename):
+    """Load the style (visConfig) from a file
+
+    Looks for visConfig element value in the full Map Config file,
+    looks for the visConfig element at top level,
+    or assumes the whole file content is visConfig content
+    (in this order).
+
+    Calls fatal when the file does not exist or its format was not recognized.
+
+    See load_key_value_file() for the supported formats.
+    """
+    if not os.path.exists(filename) or not os.path.isfile(filename):
+        gs.fatal(_("Style file <{filename}> does not exist").format(filename=filename))
+    try:
+        style = load_key_value_file(filename)
+    except ValueError as error:
+        gs.fatal(_("Format of style file not recognized: {error}").format(error=error))
+    if "config" in style:
+        return style["config"]["visState"]["layers"][0]["config"]["visConfig"]
+    if "visConfig" in style:
+        return style["visConfig"]
+    return style
+
+
 def add_layer(config, data_id, label, visual_channels, style_file):
     """Add layer to configuration
 
     Currently, only one layer is possible since id is hardcoded.
     """
     if style_file:
-        try:
-            style = load_key_value_file(style_file)
-        except ValueError as error:
-            gs.fatal(
-                _("Format of style file not recognized: {error}").format(error=error)
-            )
+        style = load_style_from_file(style_file)
     else:
         style = {}
 
