@@ -357,6 +357,7 @@ def main():
         output=geojson_file,
         format="GeoJSON",
         flags="s",
+        quiet=True,
     )
 
     write_html(
