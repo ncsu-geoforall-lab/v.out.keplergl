@@ -83,7 +83,7 @@ def load_key_value_file(filename):
 
     Supported formats are JSON, YAML, and Python literals.
     Formats are distinguised by extension.
-    Extension for Python literals is `.py` or `.dict`.
+    Extension for Python literals is `.py`, `.dict`, and `.pydict`.
 
     This function lazy imports all non-standard dependencies.
     """
@@ -100,7 +100,7 @@ def load_key_value_file(filename):
             if hasattr(yaml, "full_load"):
                 return yaml.full_load(file)
             return yaml.load(file)
-    elif lower.endswith(".py") or lower.endswith(".dict"):
+    elif lower.endswith(".py") or lower.endswith(".dict") or lower.endswith(".pydict"):
         import ast
 
         with open(filename) as file:
