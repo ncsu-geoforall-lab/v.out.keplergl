@@ -264,7 +264,7 @@ def add_map_state(config, zoom):
         "latitude": latitude,
         "longitude": longitude,
         "pitch": 0,
-        "zoom": float(zoom),
+        "zoom": int(zoom),
         "isSplit": False,
     }
     config["config"]["mapState"] = map_state
