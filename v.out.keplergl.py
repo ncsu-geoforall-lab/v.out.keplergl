@@ -78,6 +78,24 @@ import json
 
 import grass.script as gs
 
+try:
+    from grass.script import sql_type_is_float
+except ImportError:
+    _SQL_FLOAT_TYPES = [
+        "REAL",
+        "DOUBLE",
+        "DOUBLE PRECISION",
+        "FLOAT",
+        "FLOATING POINT",
+    ]
+
+    def sql_type_is_float(sql_type):
+        """Return True if SQL type is floating point
+
+        Returns True for known floating point types, False otherwise.
+        """
+        return sql_type.upper() in _SQL_FLOAT_TYPES
+
 
 def load_key_value_file(filename):
     """Load nested dict structure from a file.
@@ -235,17 +253,24 @@ def create_visual_channels(color_column, stroke_color_column, height_column):
         "radiusScale": "linear",
     }
     if color_column:
-        visual_channels["colorField"] = {"name": color_column, "type": "integer"}
+        visual_channels["colorField"] = {
+            "name": color_column.name,
+            "type": color_column.kepler_type,
+        }
+        visual_channels["colorScale"] = color_column.kepler_scale
     if stroke_color_column:
         visual_channels["strokeColorField"] = {
-            "name": stroke_color_column,
-            "type": "integer",
+            "name": stroke_color_column.name,
+            "type": stroke_color_column.kepler_type,
         }
+        visual_channels["strokeColorScale"] = stroke_color_column.kepler_scale
     if height_column:
         visual_channels["heightField"] = {
-            "name": height_column,
-            "type": "integer",
+            "name": height_column.name,
+            "type": height_column.kepler_type,
         }
+        # TODO: More complicated system than one fixed property is needed
+        # for height, radius and size. Maybe just size and color scale properties.
     return visual_channels
 
 
@@ -304,6 +329,68 @@ def write_html(geojson_file, data_id, output_html, config, title):
             file.write(line)
 
 
+class Column:
+    """Holds metadata about a column"""
+
+    def __init__(self, name, column_infos):
+        """Takes name of the column and dict from grass.script.vector_columns()"""
+        self._infos = column_infos
+        self.name = name
+
+    def __bool__(self):
+        """Return True if the name was set.
+
+        Returns false when the name is empty or None allowing user to
+        not set the column in the module interface.
+        """
+        return bool(self.name)
+
+    @property
+    def sql_type(self):
+        """SQL type as a string"""
+        return self._infos[self.name]["type"]
+
+    def is_float(self):
+        """Return True if SQL type a float type in Python?"""
+        return sql_type_is_float(self.sql_type)
+
+    @property
+    def kepler_type(self):
+        """Kepler.gl type of the column
+
+        Only real and integer supported/tested for now.
+        """
+        if self.is_float():
+            return "real"
+        return "integer"
+
+    @property
+    def kepler_scale(self):
+        """Kepler.gl scale for the column
+
+        quantile for float and quantize for anything else.
+        """
+        if self.is_float():
+            return "quantile"
+        return "quantize"
+
+
+def check_columns(column_names, column_infos, vector_name, layer):
+    """Fail with fatal when one of the columns does not exist
+
+    *column_names* is a list. An empty string or None in the list is skipped.
+    This allows user not to provide the name in the module interface.
+    """
+    for column in column_names:
+        if column and column not in column_infos:
+            gs.fatal(
+                _(
+                    "Column <{column}> does not exists"
+                    " in vector map {vector_name} (layer {vector_layer})"
+                ).format(column=column, vector_name=vector_name, vector_layer=layer)
+            )
+
+
 def main():
     """Processes command line and directs the creation of the visualization"""
     options, unused_flags = gs.parser()
@@ -313,17 +400,39 @@ def main():
 
     data_id = vector_input.replace("@", "__at__")
 
-    # TODO: Use map title if present, then map name as defaults.
+    # TODO: since we are specifying vector columns, we need to specify layer.
+    layer = 1
+    column_infos = gs.vector_columns(vector_input, layer)
+
+    if options["columns"]:
+        show_columns = options["columns"].split(",")
+    else:
+        # Not providing any columns makes Kepler to show all.
+        show_columns = []
+
+    check_columns(
+        column_names=[
+            options["color_column"],
+            options["stroke_color_column"],
+            options["height_column"],
+        ]
+        + show_columns,
+        column_infos=column_infos,
+        vector_name=vector_input,
+        layer=layer,
+    )
+
     if options["label"]:
         data_label = options["label"]
     else:
+        # TODO: Use map title if present, and only then map name as a default/fallback.
         data_label = vector_input
 
     config = create_base_configuration()
     visual_channels = create_visual_channels(
-        color_column=options["color_column"],
-        stroke_color_column=options["stroke_color_column"],
-        height_column=options["height_column"],
+        color_column=Column(options["color_column"], column_infos),
+        stroke_color_column=Column(options["stroke_color_column"], column_infos),
+        height_column=Column(options["height_column"], column_infos),
     )
     add_layer(
         config,
@@ -334,13 +443,6 @@ def main():
     )
 
     # Maybe move to add_columns_to_show(config,... function.
-    if options["columns"]:
-        # TODO: Check for column presence is needed here.
-        # (Parser does not know which map to check.)
-        show_columns = options["columns"].split(",")
-    else:
-        # TODO: Get all columns if needed to display all.
-        show_columns = []
     config["config"]["visState"]["interactionConfig"]["tooltip"]["fieldsToShow"][
         data_id
     ] = show_columns
